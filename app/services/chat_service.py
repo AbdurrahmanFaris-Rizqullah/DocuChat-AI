@@ -24,21 +24,22 @@ class ChatService:
         )
     
     def get_response(self, chain, question):
+        # Jika tidak ada chain, gunakan LLM langsung
         if not chain:
-            return "Mohon upload file terlebih dahulu."
+            messages = [{"role": "user", "content": question}]
+            response = self.llm.invoke(messages).content
+            
+            # Simpan pesan ke riwayat
+            self.chat_history.append(HumanMessage(content=question))
+            self.chat_history.append(AIMessage(content=response))
+            
+            return response
         
-        # Konfigurasi untuk menyimpan riwayat chat    
-        config = RunnableConfig(
-            configurable={
-                "chat_history": self.chat_history
-            }
-        )
-        
-        # Jalankan chain dengan konfigurasi
-        response = chain.invoke(
-            {"question": question},
-            config=config
-        )
+        # Jika ada chain, gunakan untuk analisis dokumen
+        response = chain.invoke({
+            "question": question,
+            "chat_history": self.chat_history
+        })
         
         # Simpan pesan ke riwayat
         self.chat_history.append(HumanMessage(content=question))

@@ -39,20 +39,22 @@ def process_and_ask():
         
         vector_store_service.create_vector_store(all_texts)
         
+        # Jika file berhasil diupload, langsung analisis isinya
+        default_question = "Berikan ringkasan dari dokumen ini"
+        retriever = vector_store_service.get_retriever()
+        chain = chat_service.create_chain(retriever)
+        summary = chat_service.get_response(chain, default_question)
+        
         if not question:
             return jsonify({
-                'message': 'File berhasil diproses, siap menerima pertanyaan'
+                'message': 'File berhasil diproses',
+                'summary': summary
             })
     
-    # Proses pertanyaan
+    # Proses pertanyaan spesifik jika ada
     if question:
         retriever = vector_store_service.get_retriever()
-        if not retriever:
-            return jsonify({
-                'error': 'Mohon upload file terlebih dahulu sebelum mengajukan pertanyaan'
-            }), 400
-        
-        chain = chat_service.create_chain(retriever)
+        chain = chat_service.create_chain(retriever) if retriever else None
         response = chat_service.get_response(chain, question)
         
         return jsonify({

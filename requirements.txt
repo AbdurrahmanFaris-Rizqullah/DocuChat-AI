@@ -10,3 +10,5 @@ langchain-openai
 faiss-cpu
 unstructured
 tiktoken
+python-magic-bin 
+docx2txt
