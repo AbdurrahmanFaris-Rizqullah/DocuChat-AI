@@ -14,7 +14,16 @@ API ini memungkinkan pengguna untuk melakukan chat dengan dokumen menggunakan te
 ```bash
 OPENAI_API_KEY=your_api_key_here
 ```
-3. Install dependensi:
+3. bikin venv terlebih dahulu
+```bash
+python -m venv venv
+```
+4. Aktifkan venv:
+```bash
+source venv/bin/activat
+```
+
+5. Install dependensi:
 ```bash
 pip install -r requirements.txt
 ```
