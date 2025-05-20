@@ -20,7 +20,7 @@ python -m venv venv
 ```
 4. Aktifkan venv:
 ```bash
-source venv/bin/activat
+venv/bin/activate
 ```
 
 5. Install dependensi:
