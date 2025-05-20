@@ -1,0 +1,12 @@
+Flask
+python-dotenv
+openai
+PyPDF2
+python-docx
+python-pptx
+langchain
+langchain-community
+langchain-openai
+faiss-cpu
+unstructured
+tiktoken
