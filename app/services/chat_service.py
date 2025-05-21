@@ -24,7 +24,7 @@ class ChatService:
         )
     
     def get_response(self, chain, question):
-        # Jika tidak ada chain, gunakan LLM langsung
+        # Jika tidak ada chain (tidak ada dokumen)
         if not chain:
             messages = [{"role": "user", "content": question}]
             response = self.llm.invoke(messages).content

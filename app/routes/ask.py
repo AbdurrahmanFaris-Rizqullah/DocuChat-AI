@@ -1,5 +1,7 @@
 from flask import Blueprint, request, jsonify
 from app.services import DocumentService, VectorStoreService, ChatService
+from app.config import EMBED_MODE  # Tambahkan import ini
+# import os
 
 ask_bp = Blueprint('ask', __name__)
 
@@ -31,26 +33,40 @@ def process_and_ask():
     if has_files:
         files = request.files.getlist('files')
         all_texts = []
+        raw_text = ""
         
         for file in files:
             texts = document_service.process_file(file)
             if texts:
+                # Simpan raw text untuk mode tanpa embedding
+                raw_text += "\n\n".join([doc.page_content for doc in texts])
+                # Simpan texts untuk mode dengan embedding
                 all_texts.extend(texts)
         
-        if all_texts:
+        if not all_texts:
+            return jsonify({
+                'error': 'Tidak ada teks yang bisa diekstrak dari file'
+            }), 400
+            
+        # Gunakan EMBED_MODE dari environment
+        if EMBED_MODE.lower() == 'true':
+            # Mode dengan embedding
+            print("Menggunakan mode embedding sesuai konfigurasi")
             vector_store_service.create_vector_store(all_texts)
             print("Berhasil membuat vector store dari dokumen")
-    
-    # Proses pertanyaan
-    # Jika ada vector store, gunakan untuk konteks
-    # Jika tidak ada, gunakan chat biasa
-    retriever = vector_store_service.get_retriever()
-    if retriever:
-        chain = chat_service.create_chain(retriever)
+            retriever = vector_store_service.get_retriever()
+            chain = chat_service.create_chain(retriever) if retriever else None
+            response = chat_service.get_response(chain, question)
+        else:
+            # Mode tanpa embedding (direct text)
+            print("Menggunakan mode direct text sesuai konfigurasi")
+            prompt = f"Berdasarkan konten berikut:\n\n{raw_text}\n\nJawab pertanyaan ini:\n{question}"
+            messages = [{"role": "user", "content": prompt}]
+            response = chat_service.llm.invoke(messages).content
     else:
+        # Tidak ada file, langsung tanya ke LLM
         chain = None
-    
-    response = chat_service.get_response(chain, question)
+        response = chat_service.get_response(chain, question)
     
     return jsonify({
         'answer': response
