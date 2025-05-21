@@ -62,14 +62,8 @@ def process_and_ask():
                     vector_store_service.create_vector_store(all_texts)
                     print("Berhasil membuat vector store dari dokumen")
                     retriever = vector_store_service.get_retriever()
-                    
-                    # Gunakan model yang sama untuk mode embedding
-                    prompt = f"You are an assistant. Based on the following content:\n\n{raw_text}\n\nAnswer this question:\n{question}"
-                    response = client.chat.completions.create(
-                        model="gpt-4.1-nano-2025-04-14",
-                        messages=[{"role": "user", "content": prompt}],
-                        temperature=0,
-                    ).choices[0].message.content.strip()
+                    chain = chat_service.create_chain(retriever)
+                    response = chat_service.get_response(chain, question)
                 else:
                     # Mode tanpa embedding (direct text)
                     print("Menggunakan mode direct text sesuai konfigurasi")
