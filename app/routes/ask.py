@@ -12,14 +12,19 @@ chat_service = ChatService()
 def process_and_ask():
     # Cek apakah ada file yang diupload
     has_files = 'files' in request.files
-    # Cek apakah ada pertanyaan
-    data = request.get_json() if request.is_json else {}
-    question = data.get('question') if data else None
     
-    # Jika tidak ada file dan tidak ada pertanyaan
-    if not has_files and not question:
+    # Cek pertanyaan dari form-data atau json
+    question = None
+    if request.is_json:
+        data = request.get_json()
+        question = data.get('question')
+    else:
+        question = request.form.get('question')
+    
+    # Jika tidak ada pertanyaan
+    if not question:
         return jsonify({
-            'error': 'Request harus menyertakan file untuk dianalisis atau pertanyaan untuk dijawab'
+            'error': 'Mohon berikan pertanyaan yang ingin dijawab'
         }), 400
     
     # Proses file jika ada
@@ -32,31 +37,21 @@ def process_and_ask():
             if texts:
                 all_texts.extend(texts)
         
-        if not all_texts:
-            return jsonify({
-                'error': 'Tidak ada dokumen valid yang dapat diproses'
-            }), 400
-        
-        vector_store_service.create_vector_store(all_texts)
-        
-        # Jika file berhasil diupload, langsung analisis isinya
-        default_question = "Berikan ringkasan dari dokumen ini"
-        retriever = vector_store_service.get_retriever()
-        chain = chat_service.create_chain(retriever)
-        summary = chat_service.get_response(chain, default_question)
-        
-        if not question:
-            return jsonify({
-                'message': 'File berhasil diproses',
-                'summary': summary
-            })
+        if all_texts:
+            vector_store_service.create_vector_store(all_texts)
+            print("Berhasil membuat vector store dari dokumen")
     
-    # Proses pertanyaan spesifik jika ada
-    if question:
-        retriever = vector_store_service.get_retriever()
-        chain = chat_service.create_chain(retriever) if retriever else None
-        response = chat_service.get_response(chain, question)
-        
-        return jsonify({
-            'answer': response
-        })
+    # Proses pertanyaan
+    # Jika ada vector store, gunakan untuk konteks
+    # Jika tidak ada, gunakan chat biasa
+    retriever = vector_store_service.get_retriever()
+    if retriever:
+        chain = chat_service.create_chain(retriever)
+    else:
+        chain = None
+    
+    response = chat_service.get_response(chain, question)
+    
+    return jsonify({
+        'answer': response
+    })

@@ -1,8 +1,8 @@
 from langchain_openai import ChatOpenAI
 from langchain.chains import ConversationalRetrievalChain
-from langchain_core.runnables import RunnableConfig
 from langchain_core.messages import HumanMessage, AIMessage
 from app.config import OPENAI_API_KEY
+# from langchain_core.runnables import RunnableConfig
 
 class ChatService:
     def __init__(self):
